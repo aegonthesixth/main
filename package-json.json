@@ -1,0 +1,27 @@
+{
+  "name": "mun-committee-speech-timer",
+  "version": "1.0.0",
+  "description": "A speech timer application for Model United Nations committees",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:html": "htmlhint *.html",
+    "lint:css": "stylelint \"**/*.css\"",
+    "lint:js": "eslint \"**/*.js\"",
+    "lint": "npm run lint:html && npm run lint:css && npm run lint:js"
+  },
+  "keywords": [
+    "mun",
+    "timer",
+    "speech",
+    "committee"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.38.0",
+    "htmlhint": "^1.1.4",
+    "stylelint": "^15.4.0",
+    "stylelint-config-standard": "^32.0.0"
+  }
+}
