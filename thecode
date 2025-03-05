@@ -1,2 +1,1317 @@
-git clone https://github.com/yourusername/mun-committee-speech-timer.git
-cd mun-committee-speech-timer
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUN Committee Speech Timer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6750A4;
+            --secondary: #625B71;
+            --accent: #7D5260;
+            --success: #4CAF50;
+            --warning: #FFA726;
+            --danger: #F44336;
+            --bg-primary: #F8F8FC;
+            --bg-secondary: #F0F0F6;
+            --bg-elevated: #FFFFFF;
+            --text-primary: #1C1B1F;
+            --text-secondary: #49454F;
+            --border: #E0E0E6;
+            --highlight: #E8DEF8;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            background-color: var(--bg-elevated);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 12px 15px;
+            font-weight: bold;
+        }
+
+        .timer-card {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .timer-buttons .btn {
+            margin: 0 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+
+        .list-group-item:first-child {
+            border-top: none;
+        }
+
+        .list-group-item.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        #currentSpeaker {
+            font-size: 2rem;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .timer-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .timer-box {
+            flex: 1;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            text-align: center;
+        }
+
+        #sessionTimer {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #caucusTimer {
+            background-color: #03A9F4;
+            color: white;
+        }
+
+        #speechTimer {
+            background-color: #FF9800;
+            color: white;
+        }
+
+        .speaker-list-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .notes-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .speaker-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .navbar-brand {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">MUN Committee Speech Timer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#speakingList">Speaking List</a>
+                    </li>
+                </ul>
+                <div class="ms-auto d-flex">
+                    <select id="committeeSelect" class="form-select me-2">
+                        <option value="UNSC">UNSC</option>
+                        <option value="UNODC">UNODC</option>
+                        <option value="UNGA">UNGA</option>
+                        <option value="UNHRC">UNHRC</option>
+                        <option value="ECOSOC">ECOSOC</option>
+                        <option value="WHO">WHO</option>
+                    </select>
+                    <button id="exportData" class="btn btn-warning">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="tab-content">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard">
+                <div class="row">
+                    <div class="col-md-4">
+                        <!-- Countries List -->
+                        <div class="card">
+                            <div class="card-header">Countries</div>
+                            <div class="card-body p-0">
+                                <div class="list-group" id="countryList" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Countries will be populated here -->
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <button id="addToSpeakingList" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus"></i> Add to Speaking List
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Speaker Frequency -->
+                        <div class="card">
+                            <div class="card-header">Speaker Frequency</div>
+                            <div class="card-body p-0">
+                                <div class="list-group" id="frequencyList" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Will be populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <!-- Timers Section -->
+                        <div class="timer-container">
+                            <div class="timer-box" id="sessionTimer">
+                                <h5>Session</h5>
+                                <div class="timer-display" id="sessionDisplay">00:00</div>
+                                <div class="timer-buttons">
+                                    <button class="btn btn-sm btn-light" onclick="startTimer('session')">Start</button>
+                                    <button class="btn btn-sm btn-light" onclick="stopTimer('session')">Stop</button>
+                                    <button class="btn btn-sm btn-light" onclick="resetTimer('session')">Reset</button>
+                                </div>
+                            </div>
+                            <div class="timer-box" id="caucusTimer">
+                                <h5>Caucus</h5>
+                                <div class="timer-display" id="caucusDisplay">00:00</div>
+                                <div class="timer-buttons">
+                                    <button class="btn btn-sm btn-light" onclick="startTimer('caucus')">Start</button>
+                                    <button class="btn btn-sm btn-light" onclick="stopTimer('caucus')">Stop</button>
+                                    <button class="btn btn-sm btn-light" onclick="resetTimer('caucus')">Reset</button>
+                                </div>
+                            </div>
+                            <div class="timer-box" id="speechTimer">
+                                <h5>Speech</h5>
+                                <div class="timer-display" id="speechDisplay">00:00</div>
+                                <div class="timer-buttons">
+                                    <button class="btn btn-sm btn-light" onclick="startTimer('speech')">Start</button>
+                                    <button class="btn btn-sm btn-light" onclick="stopTimer('speech')">Stop</button>
+                                    <button class="btn btn-sm btn-light" onclick="resetTimer('speech')">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="rearrangeTimers" class="btn btn-secondary mb-3">
+                            <i class="fas fa-sync"></i> Rearrange Timers
+                        </button>
+
+                        <!-- Notes Section -->
+                        <div class="card">
+                            <div class="card-header">Notes</div>
+                            <div class="card-body">
+                                <textarea id="notesArea" class="form-control mb-3" rows="5"></textarea>
+                                <div class="notes-buttons">
+                                    <button class="btn btn-success" onclick="addNote('Good Speech')">Good Speech</button>
+                                    <button class="btn btn-danger" onclick="addNote('Bad Speech')">Bad Speech</button>
+                                    <button class="btn btn-primary" onclick="addNote('Good Diplomacy')">Good Diplomacy</button>
+                                    <button class="btn btn-warning" onclick="addNote('Bad Diplomacy')">Bad Diplomacy</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="funMode" class="btn btn-primary mt-3 w-100">
+                            <i class="fas fa-gamepad"></i> Fun Committee Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speaking List Tab -->
+            <div class="tab-pane fade" id="speakingList">
+                <div class="card">
+                    <div class="card-header">Current Speaker</div>
+                    <div class="card-body">
+                        <div id="currentSpeaker">None</div>
+                        <div class="speaker-controls">
+                            <button id="nextSpeaker" class="btn btn-success">
+                                <i class="fas fa-step-forward"></i> Next Speaker
+                            </button>
+                            <button id="skipSpeaker" class="btn btn-danger">
+                                <i class="fas fa-fast-forward"></i> Skip Speaker
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Speaking List</div>
+                    <div class="card-body">
+                        <div class="list-group" id="speakersList" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                        <div class="speaker-list-buttons mt-3">
+                            <button id="moveUp" class="btn btn-primary">
+                                <i class="fas fa-arrow-up"></i> Move Up
+                            </button>
+                            <button id="moveDown" class="btn btn-primary">
+                                <i class="fas fa-arrow-down"></i> Move Down
+                            </button>
+                            <button id="removeFromList" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                            <button id="clearList" class="btn btn-secondary">
+                                <i class="fas fa-broom"></i> Clear List
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fun Mode Modal -->
+    <div class="modal fade" id="funModeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background-color: #FF5BFF;">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="color: white;">Fun Committee Mode</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <h2 class="text-white mb-4">Fun Timer</h2>
+                    <div id="funTimerDisplay" style="font-size: 3rem; color: white;">00:00</div>
+                    <div class="mt-3 mb-4">
+                        <button class="btn btn-primary mx-2" onclick="startTimer('fun')">Start</button>
+                        <button class="btn btn-primary mx-2" onclick="stopTimer('fun')">Stop</button>
+                        <button class="btn btn-primary mx-2" onclick="resetTimer('fun')">Reset</button>
+                    </div>
+                    
+                    <h3 class="text-white mb-3">Game Options</h3>
+                    <div class="card mb-2" style="background-color: #FFE6F7;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <span>UN Charades - Votes: <span class="vote-count">0</span></span>
+                            <button class="btn btn-primary vote-btn">Vote</button>
+                        </div>
+                    </div>
+                    <div class="card mb-2" style="background-color: #FFE6F7;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
+                            <button class="btn btn-primary vote-btn">Vote</button>
+                        </div>
+                    </div>
+                    <div class="card mb-2" style="background-color: #FFE6F7;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
+                            <button class="btn btn-primary vote-btn">Vote</button>
+                        </div>
+                    </div>
+                    <div class="card mb-4" style="background-color: #FFE6F7;">
+                        <div class="card-body d-flex justify-content-between align-items-center">
+                            <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
+                            <button class="btn btn-primary vote-btn">Vote</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Exit Fun Mode</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Call Modal -->
+    <div class="modal fade" id="roleCallModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Role Call</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h4 id="roleCallCommittee">Committee: UNSC</h4>
+                        <div class="d-flex">
+                            <input type="date" id="roleCallDate" class="form-control me-2">
+                            <button id="addRoleCallDate" class="btn btn-primary">Add Date</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="roleCallTable">
+                            <thead>
+                                <tr>
+                                    <th>Country</th>
+                                    <!-- Date columns will be added dynamically -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Committee Data
+const committees = {
+    "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
+            "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
+            "Norway", "United Arab Emirates"],
+    "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
+            "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands", 
+            "Sweden", "Australia", "New Zealand", "South Africa", "Nigeria", "Egypt", 
+            "Saudi Arabia"],
+    "UNGA": ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+            "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
+            "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
+            "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", 
+            "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", 
+            "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", 
+            "Comoros", "Congo", "Costa Rica", "Côte d'Ivoire", "Croatia", "Cuba", "Cyprus", 
+            "Czechia", "Democratic People's Republic of Korea", "Democratic Republic of the Congo", 
+            "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", 
+            "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", 
+            "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+            "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", 
+            "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", 
+            "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", 
+            "Kuwait", "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", 
+            "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", 
+            "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", 
+            "Mauritania", "Mauritius", "Mexico", "Micronesia", "Monaco", "Mongolia", "Montenegro", 
+            "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", 
+            "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", 
+            "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", 
+            "Poland", "Portugal", "Qatar", "Republic of Korea", "Republic of Moldova", "Romania", 
+            "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", 
+            "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+            "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", 
+            "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", 
+            "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", 
+            "Tajikistan", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", 
+            "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", 
+            "United Kingdom", "United Republic of Tanzania", "United States", "Uruguay", "Uzbekistan", 
+            "Vanuatu", "Venezuela", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"],
+    "UNHRC": ["Argentina", "Armenia", "Bangladesh", "Benin", "Bolivia", "Brazil", "Cameroon", 
+            "China", "Côte d'Ivoire", "Croatia", "Cuba", "Czechia", "Denmark", "Eritrea", 
+            "Finland", "France", "Germany", "Honduras", "India", "Indonesia", "Japan", 
+            "Kazakhstan", "Kyrgyzstan", "Libya", "Malawi", "Malaysia", "Mauritania", "Mexico", 
+            "Montenegro", "Nepal", "Pakistan", "Paraguay", "Poland", "Qatar", "Republic of Korea", 
+            "Republic of Moldova", "Russian Federation", "Somalia", "South Africa", "Sudan", 
+            "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uzbekistan", 
+            "Venezuela"],
+    "ECOSOC": ["Afghanistan", "Argentina", "Austria", "Bangladesh", "Benin", "Bolivia", "Botswana", 
+            "Brazil", "Bulgaria", "Canada", "China", "Colombia", "Costa Rica", "Czechia", 
+            "Denmark", "Ecuador", "Finland", "France", "Germany", "Greece", "Guatemala", 
+            "India", "Indonesia", "Italy", "Japan", "Liberia", "Libya", "Madagascar", "Malaysia", 
+            "Mauritius", "Mexico", "Morocco", "Norway", "Peru", "Portugal", "Republic of Korea", 
+            "Republic of Moldova", "Russian Federation", "Saudi Arabia", "Slovenia", "Solomon Islands", 
+            "Thailand", "Togo", "Tunisia", "Turkmenistan", "United Kingdom", "United States", 
+            "Uruguay", "Venezuela"],
+    "WHO": ["Afghanistan", "Angola", "Argentina", "Australia", "Austria", "Bangladesh", "Barbados", 
+            "Belgium", "Brazil", "Burkina Faso", "Cameroon", "Canada", "China", "Colombia", "Croatia", 
+            "Denmark", "Egypt", "Ethiopia", "Finland", "France", "Germany", "Ghana", "India", 
+            "Indonesia", "Iran", "Iraq", "Ireland", "Italy", "Jamaica", "Japan", "Kenya", "Malaysia", 
+            "Mexico", "Morocco", "Nepal", "Netherlands", "New Zealand", "Nigeria", "Norway", "Pakistan", 
+            "Peru", "Philippines", "Poland", "Qatar", "Russian Federation", "Saudi Arabia", "Senegal", 
+            "Singapore", "South Africa", "Spain", "Sweden", "Switzerland", "Thailand", "Turkey", 
+            "United Arab Emirates", "United Kingdom", "United States", "Viet Nam", "Zambia"]
+};
+
+// Global State
+const state = {
+    currentSpeaker: null,
+    speakers: [],
+    delegateData: {},
+    notes: [],
+    attendanceData: {},
+    attendanceDates: [],
+    countryListLocked: false,
+    
+    // Timer states
+    timers: {
+        session: {
+            running: false,
+            startTime: 0,
+            elapsedTime: 0,
+            intervalId: null
+        },
+        caucus: {
+            running: false,
+            startTime: 0,
+            elapsedTime: 0,
+            intervalId: null
+        },
+        speech: {
+            running: false,
+            startTime: 0,
+            elapsedTime: 0,
+            intervalId: null
+        },
+        fun: {
+            running: false,
+            startTime: 0,
+            elapsedTime: 0,
+            intervalId: null
+        }
+    }
+};
+
+// Element references
+const elements = {
+    countryList: document.getElementById('countryList'),
+    speakersList: document.getElementById('speakersList'),
+    frequencyList: document.getElementById('frequencyList'),
+    currentSpeaker: document.getElementById('currentSpeaker'),
+    notesArea: document.getElementById('notesArea'),
+    committeeSelect: document.getElementById('committeeSelect'),
+    
+    // Timer displays
+    sessionDisplay: document.getElementById('sessionDisplay'),
+    caucusDisplay: document.getElementById('caucusDisplay'),
+    speechDisplay: document.getElementById('speechDisplay'),
+    funTimerDisplay: document.getElementById('funTimerDisplay')
+};
+
+// Initialize the application
+function init() {
+    // Load countries for the default committee
+    updateCountryList();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Initialize today's date in the role call modal
+    document.getElementById('roleCallDate').valueAsDate = new Date();
+    
+    // Try to load any saved data
+    loadSavedData();
+}
+
+// Set up event listeners for all interactive elements
+function setupEventListeners() {
+    // Committee selection
+    elements.committeeSelect.addEventListener('change', updateCountryList);
+    
+    // Dashboard tab
+    document.getElementById('addToSpeakingList').addEventListener('click', addToSpeakingList);
+    document.getElementById('rearrangeTimers').addEventListener('click', rearrangeTimers);
+    document.getElementById('exportData').addEventListener('click', exportData);
+    document.getElementById('funMode').addEventListener('click', () => {
+        const funModal = new bootstrap.Modal(document.getElementById('funModeModal'));
+        funModal.show();
+    });
+    
+    // Speaking list tab
+    document.getElementById('nextSpeaker').addEventListener('click', nextSpeaker);
+    document.getElementById('skipSpeaker').addEventListener('click', skipSpeaker);
+    document.getElementById('moveUp').addEventListener('click', moveUp);
+    document.getElementById('moveDown').addEventListener('click', moveDown);
+    document.getElementById('removeFromList').addEventListener('click', removeFromList);
+    document.getElementById('clearList').addEventListener('click', clearList);
+    
+    // Fun mode vote buttons
+    document.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const voteCount = this.closest('.card-body').querySelector('.vote-count');
+            voteCount.textContent = (parseInt(voteCount.textContent) + 1).toString();
+        });
+    });
+}
+
+// Update the country list based on selected committee
+function updateCountryList() {
+    const committee = elements.committeeSelect.value;
+    elements.countryList.innerHTML = '';
+    
+    // If countries are locked, load from local storage
+    if (state.countryListLocked) {
+        const lockedData = getLockedCountries(committee);
+        if (lockedData) {
+            // Populate from locked data
+            lockedData.countries.forEach(country => {
+                addCountryToList(country);
+            });
+            return;
+        }
+    }
+    
+    // Otherwise populate from default committee data
+    committees[committee].forEach(country => {
+        addCountryToList(country);
+    });
+    
+    // Update the role call committee name
+    document.getElementById('roleCallCommittee').textContent = `Committee: ${committee}`;
+}
+
+// Add a country to the country list
+function addCountryToList(country) {
+    const item = document.createElement('a');
+    item.href = '#';
+    item.className = 'list-group-item list-group-item-action';
+    item.textContent = country;
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Toggle selection
+        document.querySelectorAll('#countryList a').forEach(el => {
+            el.classList.remove('active');
+        });
+        this.classList.add('active');
+    });
+    elements.countryList.appendChild(item);
+}
+
+// Add selected country to speaking list
+function addToSpeakingList() {
+    const selected = document.querySelector('#countryList a.active');
+    if (!selected) {
+        alert('Please select a country first');
+        return;
+    }
+    
+    const country = selected.textContent;
+    
+    // Check for duplicates
+    let isDuplicate = false;
+    document.querySelectorAll('#speakersList a').forEach(el => {
+        if (el.textContent === country) {
+            isDuplicate = true;
+        }
+    });
+    
+    if (isDuplicate && !confirm(`${country} is already in the speaking list. Add anyway?`)) {
+        return;
+    }
+    
+    // Add to the speakers list
+    addSpeakerToList(country);
+    
+    // Switch to speaking list tab
+    document.querySelector('a[href="#speakingList"]').click();
+    
+    // Update state
+    state.speakers.push(country);
+}
+
+// Add a speaker to the list
+function addSpeakerToList(country) {
+    const item = document.createElement('a');
+    item.href = '#';
+    item.className = 'list-group-item list-group-item-action';
+    item.textContent = country;
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Toggle selection
+        document.querySelectorAll('#speakersList a').forEach(el => {
+            el.classList.remove('active');
+        });
+        this.classList.add('active');
+    });
+    elements.speakersList.appendChild(item);
+}
+
+// Move to the next speaker
+function nextSpeaker() {
+    if (elements.speakersList.children.length === 0) {
+        alert('No speakers in the queue');
+        return;
+    }
+    
+    // Stop the current speech timer if running
+    if (state.timers.speech.running) {
+        stopTimer('speech');
+    }
+    
+    // Get the next speaker
+    const nextSpeaker = elements.speakersList.children[0].textContent;
+    elements.speakersList.removeChild(elements.speakersList.children[0]);
+    
+    // Update current speaker
+    state.currentSpeaker = nextSpeaker;
+    elements.currentSpeaker.textContent = nextSpeaker;
+    
+    // Remove from state array
+    state.speakers.shift();
+    
+    // Reset and start speech timer
+    resetTimer('speech');
+    startTimer('speech');
+}
+
+// Skip current speaker and move them to the end
+function skipSpeaker() {
+    if (elements.speakersList.children.length === 0) {
+        alert('No speakers in the queue');
+        return;
+    }
+    
+    // Move first speaker to end of list
+    const speaker = elements.speakersList.children[0].textContent;
+    elements.speakersList.removeChild(elements.speakersList.children[0]);
+    addSpeakerToList(speaker);
+    
+    // Update state array
+    const skippedSpeaker = state.speakers.shift();
+    state.speakers.push(skippedSpeaker);
+    
+    // Move to next speaker
+    nextSpeaker();
+}
+
+// Move selected speaker up in the list
+function moveUp() {
+    const selected = document.querySelector('#speakersList a.active');
+    if (!selected || selected === elements.speakersList.firstChild) {
+        return;
+    }
+    
+    // Find the index of the selected speaker
+    const children = Array.from(elements.speakersList.children);
+    const index = children.indexOf(selected);
+    
+    // Move in the DOM
+    elements.speakersList.insertBefore(selected, children[index - 1]);
+    
+    // Move in the state array
+    const temp = state.speakers[index];
+    state.speakers[index] = state.speakers[index - 1];
+    state.speakers[index - 1] = temp;
+}
+
+// Move selected speaker down in the list
+function moveDown() {
+    const selected = document.querySelector('#speakersList a.active');
+    if (!selected || selected === elements.speakersList.lastChild) {
+        return;
+    }
+    
+    // Find the index of the selected speaker
+    const children = Array.from(elements.speakersList.children);
+    const index = children.indexOf(selected);
+    
+    // Insert after the next element
+    if (children[index + 1].nextSibling) {
+        elements.speakersList.insertBefore(selected, children[index + 1].nextSibling);
+    } else {
+        elements.speakersList.appendChild(selected);
+    }
+    
+    // Move in the state array
+    const temp = state.speakers[index];
+    state.speakers[index] = state.speakers[index + 1];
+    state.speakers[index + 1] = temp;
+}
+
+// Remove selected speaker from list
+function removeFromList() {
+    const selected = document.querySelector('#speakersList a.active');
+    if (!selected) {
+        alert('Please select a speaker first');
+        return;
+    }
+    
+    // Find the index and remove from DOM
+    const children = Array.from(elements.speakersList.children);
+    const index = children.indexOf(selected);
+    elements.speakersList.removeChild(selected);
+    
+    // Remove from state array
+    state.speakers.splice(index, 1);
+}
+
+// Clear the entire speaking list
+function clearList() {
+    if (elements.speakersList.children.length === 0) {
+        return;
+    }
+    
+    if (confirm('Are you sure you want to clear the entire speaking list?')) {
+        elements.speakersList.innerHTML = '';
+        state.speakers = [];
+    }
+}
+
+// Timer functions
+function startTimer(timerType) {
+    const timer = state.timers[timerType];
+    
+    if (!timer.running) {
+        // Calculate start time based on any previous elapsed time
+        timer.startTime = Date.now() - timer.elapsedTime;
+        timer.running = true;
+        
+        // Start the interval
+        timer.intervalId = setInterval(() => {
+            updateTimerDisplay(timerType);
+        }, 1000);
+        
+        updateTimerDisplay(timerType);
+    }
+}
+
+function stopTimer(timerType) {
+    const timer = state.timers[timerType];
+    
+    if (timer.running) {
+        // Stop the interval
+        clearInterval(timer.intervalId);
+        timer.intervalId = null;
+        
+        // Save the elapsed time
+        timer.elapsedTime = Date.now() - timer.startTime;
+        timer.running = false;
+        
+        // If this is a speech timer, record the speech
+        if (timerType === 'speech' && state.currentSpeaker) {
+            recordSpeakerTime(state.currentSpeaker, timer.elapsedTime);
+        }
+    }
+}
+
+function resetTimer(timerType) {
+    const timer = state.timers[timerType];
+    
+    // Stop the timer if it's running
+    if (timer.running) {
+        clearInterval(timer.intervalId);
+        timer.intervalId = null;
+        timer.running = false;
+    }
+    
+    // Reset timer values
+    timer.startTime = 0;
+    timer.elapsedTime = 0;
+    
+    // Update display
+    const display = document.getElementById(`${timerType}Display`);
+    if (display) {
+        display.textContent = '00:00';
+    }
+}
+
+function updateTimerDisplay(timerType) {
+    const timer = state.timers[timerType];
+    const elapsed = Date.now() - timer.startTime;
+    const display = document.getElementById(`${timerType}Display`);
+    
+    if (display) {
+        display.textContent = formatTime(elapsed);
+    }
+}
+
+function formatTime(milliseconds) {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+// Record speech time for the current speaker
+function recordSpeakerTime(speaker, duration) {
+    // Initialize speaker data if it doesn't exist
+    if (!state.delegateData[speaker]) {
+        state.delegateData[speaker] = {
+            totalSpeakingTime: 0,
+            speeches: []
+        };
+    }
+    
+    // Add this speech
+    state.delegateData[speaker].speeches.push(duration);
+    state.delegateData[speaker].totalSpeakingTime += duration;
+    
+    // Update frequency display
+    updateSpeakerFrequency();
+    
+    // Save data
+    saveData();
+}
+
+// Update the frequency list display
+function updateSpeakerFrequency() {
+    // Clear current list
+    elements.frequencyList.innerHTML = '';
+    
+    // Get sorted delegates by speech count
+    const sortedDelegates = Object.entries(state.delegateData)
+        .sort((a, b) => b[1].speeches.length - a[1].speeches.length);
+    
+    // Find max frequency for color scaling
+    const maxSpeeches = sortedDelegates.length > 0 
+        ? Math.max(...sortedDelegates.map(d => d[1].speeches.length))
+        : 1;
+    
+    // Add each delegate to the frequency list
+    sortedDelegates.forEach(([delegate, data]) => {
+        const speechCount = data.speeches.length;
+        
+        // Calculate color gradient (red to green based on frequency)
+        const intensity = speechCount / maxSpeeches;
+        const red = Math.round(255 * (1 - intensity));
+        const green = Math.round(200 * intensity);
+        const blue = 100;
+        const color = `rgb(${red}, ${green}, ${blue})`;
+        
+        // Create the list item
+        const item = document.createElement('a');
+        item.href = '#';
+        item.className = 'list-group-item';
+        item.textContent = `${delegate} (${speechCount})`;
+        item.style.backgroundColor = color;
+        
+        elements.frequencyList.appendChild(item);
+    });
+}
+
+// Add a note
+function addNote(noteType) {
+    const timestamp = new Date().toLocaleTimeString();
+    const speaker = state.currentSpeaker || 'No speaker';
+    
+    const noteText = `[${timestamp}] ${speaker}: ${noteType}\n`;
+    elements.notesArea.value += noteText;
+    
+    // Auto-scroll to bottom
+    elements.notesArea.scrollTop = elements.notesArea.scrollHeight;
+    
+    // Add to state
+    state.notes.push({
+        timestamp: Date.now(),
+        speaker: speaker,
+        type: noteType,
+        text: noteText
+    });
+    
+    // Save data
+    saveData();
+}
+
+// Rearrange timers
+function rearrangeTimers() {
+    // Get the timer containers
+    const timerContainer = document.querySelector('.timer-container');
+    const timers = Array.from(timerContainer.children);
+    
+    // Rotate the timers by moving the first to the end
+    const firstTimer = timers[0];
+    timerContainer.appendChild(firstTimer);
+}
+
+// Export data to a text file
+function exportData() {
+    // Create the export content
+    let content = "MUN Speech Timer Data Export\n";
+    content += `Generated: ${new Date().toLocaleString()}\n`;
+    content += `Committee: ${elements.committeeSelect.value}\n\n`;
+    
+    // Delegate statistics
+    content += "== Delegate Speaking Statistics ==\n";
+    
+    const sortedDelegates = Object.entries(state.delegateData)
+        .sort((a, b) => b[1].totalSpeakingTime - a[1].totalSpeakingTime);
+    
+    sortedDelegates.forEach(([delegate, data]) => {
+        const totalTime = data.totalSpeakingTime;
+        const speechCount = data.speeches.length;
+        const avgTime = totalTime / speechCount;
+        
+        content += `${delegate}:\n`;
+        content += `  Total speaking time: ${formatTime(totalTime)}\n`;
+        content += `  Number of speeches: ${speechCount}\n`;
+        content += `  Average speech duration: ${formatTime(avgTime)}\n\n`;
+    });
+    
+    // Attendance data
+    if (Object.keys(state.attendanceData).length > 0) {
+        content += "== Attendance Records ==\n";
+        Object.keys(state.attendanceData).sort().forEach(country => {
+            content += `${country}:\n`;
+            state.attendanceDates.sort().forEach(date => {
+                const status = state.attendanceData[country]?.[date] ? "Present" : "Absent";
+                content += `  ${date}: ${status}\n`;
+            });
+            content += "\n";
+        });
+    }
+    
+    // Notes
+    content += "== Session Notes ==\n";
+    content += elements.notesArea.value;
+    
+    // Create and download the file
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "MUN_Speech_Times.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Save data to local storage
+function saveData() {
+    const dataToSave = {
+        delegateData: state.delegateData,
+        notes: state.notes,
+        attendanceData: state.attendanceData,
+        attendanceDates: state.attendanceDates,
+        countryListLocked: state.countryListLocked,
+        currentCommittee: elements.committeeSelect.value
+    };
+    
+    localStorage.setItem('munTimerData', JSON.stringify(dataToSave));
+}
+
+// Load saved data from local storage
+function loadSavedData() {
+    const savedData = localStorage.getItem('munTimerData');
+    if (savedData) {
+        try {
+            const data = JSON.parse(savedData);
+            
+            // Restore state
+            state.delegateData = data.delegateData || {};
+            state.notes = data.notes || [];
+            state.attendanceData = data.attendanceData || {};
+            state.attendanceDates = data.attendanceDates || [];
+            state.countryListLocked = data.countryListLocked || false;
+            
+            // Update UI with loaded data
+            if (data.currentCommittee) {
+                elements.committeeSelect.value = data.currentCommittee;
+                updateCountryList();
+            }
+            
+            // Restore notes
+            elements.notesArea.value = state.notes.map(note => note.text).join('');
+            
+            // Update frequency list
+            updateSpeakerFrequency();
+            
+        } catch (e) {
+            console.error('Error loading saved data:', e);
+        }
+    }
+}
+
+// Get locked countries for a committee
+function getLockedCountries(committee) {
+    const key = `lockedCountries_${committee}`;
+    const lockedData = localStorage.getItem(key);
+    
+    if (lockedData) {
+        try {
+            return JSON.parse(lockedData);
+        } catch (e) {
+            console.error('Error parsing locked countries data:', e);
+        }
+    }
+    
+    return null;
+}
+
+// Toggle locking the country list
+function toggleLockCountries() {
+    const committee = elements.committeeSelect.value;
+    
+    if (state.countryListLocked) {
+        // Unlock the list
+        state.countryListLocked = false;
+        alert(`The country list for ${committee} has been unlocked.`);
+    } else {
+        // Lock the list
+        state.countryListLocked = true;
+        
+        // Save the current countries
+        const countries = Array.from(elements.countryList.children).map(el => el.textContent);
+        
+        const lockedData = {
+            committee: committee,
+            countries: countries,
+            attendance: state.attendanceData,
+            dates: state.attendanceDates
+        };
+        
+        localStorage.setItem(`lockedCountries_${committee}`, JSON.stringify(lockedData));
+        alert(`The country list for ${committee} has been locked.`);
+    }
+    
+    // Update attendance indicators
+    updateAttendanceIndicators();
+    
+    // Save overall state
+    saveData();
+}
+
+// Update attendance indicators in country list
+function updateAttendanceIndicators() {
+    if (!state.countryListLocked) return;
+    
+    const today = new Date().toISOString().slice(0, 10);
+    if (!state.attendanceDates.includes(today)) return;
+    
+    // Add visual indicators to countries based on attendance
+    Array.from(elements.countryList.children).forEach(item => {
+        const country = item.textContent;
+        const isPresent = state.attendanceData[country]?.[today];
+        
+        if (isPresent) {
+            item.style.color = 'var(--success)';
+        } else if (state.attendanceData[country] && today in state.attendanceData[country]) {
+            item.style.color = 'var(--danger)';
+        }
+    });
+}
+
+// Initialize the role call table
+function initRoleCallTable() {
+    const committee = elements.committeeSelect.value;
+    const table = document.getElementById('roleCallTable');
+    const thead = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+    
+    // Clear existing content
+    while (thead.children.length > 1) {
+        thead.removeChild(thead.lastChild);
+    }
+    tbody.innerHTML = '';
+    
+    // Add date columns to header
+    state.attendanceDates.sort().forEach(date => {
+        const th = document.createElement('th');
+        th.textContent = date;
+        thead.appendChild(th);
+    });
+    
+    // Get countries
+    let countries = [];
+    if (state.countryListLocked) {
+        const lockedData = getLockedCountries(committee);
+        if (lockedData) {
+            countries = lockedData.countries;
+        } else {
+            countries = committees[committee];
+        }
+    } else {
+        countries = committees[committee];
+    }
+    
+    // Add rows for each country
+    countries.sort().forEach(country => {
+        const row = document.createElement('tr');
+        
+        // Country name cell
+        const nameCell = document.createElement('td');
+        nameCell.textContent = country;
+        row.appendChild(nameCell);
+        
+        // Attendance checkboxes for each date
+        state.attendanceDates.sort().forEach(date => {
+            const cell = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input mx-auto d-block';
+            
+            // Set initial state
+            checkbox.checked = state.attendanceData[country]?.[date] || false;
+            
+            // Add change listener
+            checkbox.addEventListener('change', function() {
+                // Initialize country in attendance data if needed
+                if (!state.attendanceData[country]) {
+                    state.attendanceData[country] = {};
+                }
+                
+                // Update attendance data
+                state.attendanceData[country][date] = this.checked;
+                
+                // Update country list indicators
+                updateAttendanceIndicators();
+                
+                // Save data
+                saveData();
+                
+                // If locked, update locked countries data too
+                if (state.countryListLocked) {
+                    const lockedData = getLockedCountries(committee);
+                    if (lockedData) {
+                        lockedData.attendance = state.attendanceData;
+                        localStorage.setItem(`lockedCountries_${committee}`, JSON.stringify(lockedData));
+                    }
+                }
+            });
+            
+            cell.appendChild(checkbox);
+            row.appendChild(cell);
+        });
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Add a new date to role call
+function addRoleCallDate() {
+    const dateInput = document.getElementById('roleCallDate');
+    const newDate = dateInput.value;
+    
+    if (!newDate) {
+        alert('Please select a date');
+        return;
+    }
+    
+    if (!state.attendanceDates.includes(newDate)) {
+        state.attendanceDates.push(newDate);
+        
+        // Initialize attendance data for all countries with this date
+        const committee = elements.committeeSelect.value;
+        let countries = [];
+        
+        if (state.countryListLocked) {
+            const lockedData = getLockedCountries(committee);
+            if (lockedData) {
+                countries = lockedData.countries;
+            } else {
+                countries = committees[committee];
+            }
+        } else {
+            countries = committees[committee];
+        }
+        
+        countries.forEach(country => {
+            if (!state.attendanceData[country]) {
+                state.attendanceData[country] = {};
+            }
+            state.attendanceData[country][newDate] = false;
+        });
+        
+        // Update the role call table
+        initRoleCallTable();
+        
+        // Save data
+        saveData();
+        
+        // If locked, update locked countries data too
+        if (state.countryListLocked) {
+            const lockedData = getLockedCountries(committee);
+            if (lockedData) {
+                lockedData.attendance = state.attendanceData;
+                lockedData.dates = state.attendanceDates;
+                localStorage.setItem(`lockedCountries_${committee}`, JSON.stringify(lockedData));
+            }
+        }
+    } else {
+        alert('This date is already in the list');
+    }
+}
+
+// Initialize application when DOM is loaded
+document.addEventListener('DOMContentLoaded', init);
+
+// Add additional event listeners after defining functions
+document.getElementById('addRoleCallDate').addEventListener('click', addRoleCallDate);
+
+// Add lock/unlock countries button event
+document.querySelector('.container > .tab-content').insertAdjacentHTML('beforebegin', `
+    <div class="d-flex justify-content-end mb-3">
+        <button id="lockCountries" class="btn btn-secondary">
+            <i class="fas fa-lock"></i> Lock Countries
+        </button>
+        <button id="roleCall" class="btn btn-primary ms-2">
+            <i class="fas fa-clipboard-list"></i> Role Call
+        </button>
+    </div>
+`);
+
+document.getElementById('lockCountries').addEventListener('click', function() {
+    toggleLockCountries();
+    this.innerHTML = state.countryListLocked ? 
+        '<i class="fas fa-unlock"></i> Unlock Countries' : 
+        '<i class="fas fa-lock"></i> Lock Countries';
+});
+
+document.getElementById('roleCall').addEventListener('click', function() {
+    if (!state.countryListLocked) {
+        alert('Please lock the country list first by clicking "Lock Countries"');
+        return;
+    }
+    
+    // Initialize role call table
+    initRoleCallTable();
+    
+    // Show the modal
+    const roleCallModal = new bootstrap.Modal(document.getElementById('roleCallModal'));
+    roleCallModal.show();
+});
